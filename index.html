@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Explore the portfolios</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+</head>
+<body>
+  <a target="_blank" class="generator" href="file:///C:/Users/ashiq/Downloads/links/2index.html">🔗</a>
+  <div class="header_menu">
+    
+    <ul>
+      <li>
+        <a href="https://devsoffice.com" target="_blank">Home</a>
+      </li>
+      <li>
+        <a href="https://devsoffice.com/lets-know-about-us/" target="_blank">About</a>
+      </li>
+      
+      <li>
+        <a href="https://devsoffice.com/resources/" target="_blank">Resources</a>
+      </li>
+      
+      <li>
+        <a href="https://devsoffice.com/tutorials/" target="_blank">Tutorials</a>
+      </li>
+    </ul>
+  </div>
+
+
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <span class="close-btn" onclick="closePopup()">&times;</span>
+      <h3 id="popup-title"></h3>
+      <p id="popup-description"></p>
+      <ul id="popup-links"></ul>
+    </div>
+  </div>
+  
+
+
+
+
+  <input type="text" id="searchInput" placeholder="Start your search—Tutor LMS, LearnDash, MemberPress, landing pages, WooCommerce, and more at your fingertips!">
+
+  <div class="box-container" id="boxContainer"></div>
+
+  <script src="data.js"></script>
+  <script>
+    let boxes = JSON.parse(JSON.stringify(defaultBoxes));
+
+    function highlightText(text, searchTerm) {
+      if (!searchTerm) return text;
+      const regex = new RegExp(`(${searchTerm})`, 'gi');
+      return text.replace(regex, '<mark>$1</mark>');
+    }
+
+    function matchesSearch(text, searchTerm) {
+      return text.toLowerCase().includes(searchTerm.toLowerCase());
+    }
+
+    function renderBoxes(searchTerm = '') {
+  const container = document.getElementById('boxContainer');
+  container.innerHTML = '';
+
+  boxes.forEach((box, index) => {
+    const inName = matchesSearch(box.name, searchTerm);
+    const inDesc = matchesSearch(box.description || '', searchTerm);
+    const anyLinkMatches = box.links.some(link => matchesSearch(link, searchTerm));
+
+    // যদি কোনো কিছু না মিলে, তাহলে পুরো box hide
+    if (searchTerm && !inName && !inDesc && !anyLinkMatches) return;
+
+    const el = document.createElement('div');
+    el.className = 'box';
+    el.setAttribute('data-index', index);
+
+    const highlightedName = highlightText(box.name, searchTerm);
+    const highlightedDesc = highlightText(box.description || '', searchTerm);
+
+    el.innerHTML = `
+    <button class="copy-links-btn" onclick="copyAllLinks(${index})">📋</button>
+      <h3 contenteditable="true" oninput="updateBoxName(${index}, this.textContent)">${highlightedName}</h3>
+      <textarea class="description" placeholder="Description..." oninput="updateDescription(${index}, this.value)">${box.description || ''}</textarea>
+      <ul class="links-list"></ul>
+
+      <button class="seemore_button" onclick="openPopup(${index})">See More</button>
+      
+    `;
+
+    const ul = el.querySelector('ul');
+    box.links.forEach(link => {
+      const safeLink = link.startsWith('http') ? link : 'https://' + link;
+      const highlightedLink = highlightText(link, searchTerm);
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <a href="${safeLink}" target="_blank">${highlightedLink}</a>
+        <button class="icon-button" onclick="removeLink(${index}, '${link}')">x</button>
+      `;
+      ul.appendChild(li);
+    });
+
+    container.appendChild(el);
+  });
+}
+
+
+    function updateBoxName(index, name) {
+      boxes[index].name = name;
+    }
+
+    function updateDescription(index, value) {
+      boxes[index].description = value;
+    }
+
+    function removeLink(boxIndex, link) {
+      boxes[boxIndex].links = boxes[boxIndex].links.filter(l => l !== link);
+      renderBoxes(document.getElementById('searchInput').value);
+    }
+
+    function copyAllLinks(index) {
+  const box = boxes[index];
+  const title = box.name;
+  const desc = box.description || '';
+  const links = box.links.map((link, i) => `${i + 1}. ${link}`).join('\n');
+  const fullText = `${title}\n${desc}\n${links}`;
+  navigator.clipboard.writeText(fullText).then(() => {
+    alert('You have copied successfully!');
+  });
+}
+
+
+    document.getElementById('searchInput').addEventListener('input', function () {
+      const term = this.value.trim();
+      renderBoxes(term);
+    });
+
+    renderBoxes();
+  </script>
+
+
+<script>
+function openPopup(index) {
+  const box = boxes[index];
+  document.getElementById('popup-title').textContent = box.name;
+  document.getElementById('popup-description').textContent = box.description || '';
+
+  const popupLinks = document.getElementById('popup-links');
+  popupLinks.innerHTML = '';
+  box.links.forEach(link => {
+    const safeLink = link.startsWith('http') ? link : 'https://' + link;
+    
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="${safeLink}" target="_blank"> ${link}</a>`;
+    popupLinks.appendChild(li);
+  });
+
+  document.getElementById('popup').style.display = 'block';
+}
+
+function closePopup() {
+  document.getElementById('popup').style.display = 'none';
+}
+
+
+</script>
+</body>
+</html>
